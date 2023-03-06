@@ -319,6 +319,8 @@ void CreateBonds::many()
 
 void CreateBonds::single_bond()
 {
+  int m;
+
   // check that 2 atoms exist
 
   const int nlocal = atom->nlocal;
@@ -339,8 +341,7 @@ void CreateBonds::single_bond()
   int **bond_type = atom->bond_type;
   tagint **bond_atom = atom->bond_atom;
 
-  int m = idx1;
-  if ((m >= 0) && (m < nlocal)) {
+  if ((m = idx1) >= 0) {
     if (num_bond[m] == atom->bond_per_atom)
       error->one(FLERR, "New bond exceeded bonds per atom in create_bonds");
     bond_type[m][num_bond[m]] = btype;
@@ -351,8 +352,7 @@ void CreateBonds::single_bond()
 
   if (force->newton_bond) return;
 
-  m = idx2;
-  if ((m >= 0) && (m < nlocal)) {
+  if ((m = idx2) >= 0) {
     if (num_bond[m] == atom->bond_per_atom)
       error->one(FLERR, "New bond exceeded bonds per atom in create_bonds");
     bond_type[m][num_bond[m]] = btype;
@@ -365,6 +365,8 @@ void CreateBonds::single_bond()
 
 void CreateBonds::single_angle()
 {
+  int m;
+
   // check that 3 atoms exist
 
   const int nlocal = atom->nlocal;
@@ -389,8 +391,7 @@ void CreateBonds::single_angle()
   tagint **angle_atom2 = atom->angle_atom2;
   tagint **angle_atom3 = atom->angle_atom3;
 
-  int m = idx2;
-  if ((m >= 0) && (m < nlocal)) {
+  if ((m = idx2) >= 0) {
     if (num_angle[m] == atom->angle_per_atom)
       error->one(FLERR, "New angle exceeded angles per atom in create_bonds");
     angle_type[m][num_angle[m]] = atype;
@@ -403,8 +404,7 @@ void CreateBonds::single_angle()
 
   if (force->newton_bond) return;
 
-  m = idx1;
-  if ((m >= 0) && (m < nlocal)) {
+  if ((m = idx1) >= 0) {
     if (num_angle[m] == atom->angle_per_atom)
       error->one(FLERR, "New angle exceeded angles per atom in create_bonds");
     angle_type[m][num_angle[m]] = atype;
@@ -414,8 +414,7 @@ void CreateBonds::single_angle()
     num_angle[m]++;
   }
 
-  m = idx3;
-  if ((m >= 0) && (m < nlocal)) {
+  if ((m = idx3) >= 0) {
     if (num_angle[m] == atom->angle_per_atom)
       error->one(FLERR, "New angle exceeded angles per atom in create_bonds");
     angle_type[m][num_angle[m]] = atype;
@@ -430,6 +429,8 @@ void CreateBonds::single_angle()
 
 void CreateBonds::single_dihedral()
 {
+  int m;
+
   // check that 4 atoms exist
 
   const int nlocal = atom->nlocal;
@@ -457,8 +458,7 @@ void CreateBonds::single_dihedral()
   tagint **dihedral_atom3 = atom->dihedral_atom3;
   tagint **dihedral_atom4 = atom->dihedral_atom4;
 
-  int m = idx2;
-  if ((m >= 0) && (m < nlocal)) {
+  if ((m = idx2) >= 0) {
     if (num_dihedral[m] == atom->dihedral_per_atom)
       error->one(FLERR, "New dihedral exceeded dihedrals per atom in create_bonds");
     dihedral_type[m][num_dihedral[m]] = dtype;
@@ -472,8 +472,7 @@ void CreateBonds::single_dihedral()
 
   if (force->newton_bond) return;
 
-  m = idx1;
-  if ((m >= 0) && (m < nlocal)) {
+  if ((m = idx1) >= 0) {
     if (num_dihedral[m] == atom->dihedral_per_atom)
       error->one(FLERR, "New dihedral exceeded dihedrals per atom in create_bonds");
     dihedral_type[m][num_dihedral[m]] = dtype;
@@ -484,8 +483,7 @@ void CreateBonds::single_dihedral()
     num_dihedral[m]++;
   }
 
-  m = idx3;
-  if ((m >= 0) && (m < nlocal)) {
+  if ((m = idx3) >= 0) {
     if (num_dihedral[m] == atom->dihedral_per_atom)
       error->one(FLERR, "New dihedral exceeded dihedrals per atom in create_bonds");
     dihedral_type[m][num_dihedral[m]] = dtype;
@@ -496,8 +494,7 @@ void CreateBonds::single_dihedral()
     num_dihedral[m]++;
   }
 
-  m = idx4;
-  if ((m >= 0) && (m < nlocal)) {
+  if ((m = idx4) >= 0) {
     if (num_dihedral[m] == atom->dihedral_per_atom)
       error->one(FLERR, "New dihedral exceeded dihedrals per atom in create_bonds");
     dihedral_type[m][num_dihedral[m]] = dtype;
@@ -513,6 +510,8 @@ void CreateBonds::single_dihedral()
 
 void CreateBonds::single_improper()
 {
+  int m;
+
   // check that 4 atoms exist
 
   const int nlocal = atom->nlocal;
@@ -540,8 +539,7 @@ void CreateBonds::single_improper()
   tagint **improper_atom3 = atom->improper_atom3;
   tagint **improper_atom4 = atom->improper_atom4;
 
-  int m = idx2;
-  if ((m >= 0) && (m < nlocal)) {
+  if ((m = idx2) >= 0) {
     if (num_improper[m] == atom->improper_per_atom)
       error->one(FLERR, "New improper exceeded impropers per atom in create_bonds");
     improper_type[m][num_improper[m]] = dtype;
@@ -555,8 +553,7 @@ void CreateBonds::single_improper()
 
   if (force->newton_bond) return;
 
-  m = idx1;
-  if ((m >= 0) && (m < nlocal)) {
+  if ((m = idx1) >= 0) {
     if (num_improper[m] == atom->improper_per_atom)
       error->one(FLERR, "New improper exceeded impropers per atom in create_bonds");
     improper_type[m][num_improper[m]] = dtype;
@@ -567,8 +564,7 @@ void CreateBonds::single_improper()
     num_improper[m]++;
   }
 
-  m = idx3;
-  if ((m >= 0) && (m < nlocal)) {
+  if ((m = idx3) >= 0) {
     if (num_improper[m] == atom->improper_per_atom)
       error->one(FLERR, "New improper exceeded impropers per atom in create_bonds");
     improper_type[m][num_improper[m]] = dtype;
@@ -579,8 +575,7 @@ void CreateBonds::single_improper()
     num_improper[m]++;
   }
 
-  m = idx4;
-  if ((m >= 0) && (m < nlocal)) {
+  if ((m = idx4) >= 0) {
     if (num_improper[m] == atom->improper_per_atom)
       error->one(FLERR, "New improper exceeded impropers per atom in create_bonds");
     improper_type[m][num_improper[m]] = dtype;

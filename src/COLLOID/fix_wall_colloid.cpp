@@ -24,6 +24,7 @@
 #include <cmath>
 
 using namespace LAMMPS_NS;
+using namespace FixConst;
 
 /* ---------------------------------------------------------------------- */
 

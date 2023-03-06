@@ -315,13 +315,14 @@ void FixDeformKokkos::end_of_step()
     int nlocal = atom->nlocal;
 
     domainKK->x2lamda(nlocal);
+    //for (i = 0; i < nlocal; i++)
+    //  if (mask[i] & groupbit)
+    //    domain->x2lamda(x[i],x[i]);
 
-    if (rfix.size() > 0) {
-      atomKK->sync(Host,ALL_MASK);
-      for (auto &ifix : rfix)
-        ifix->deform(0);
-      atomKK->modified(Host,ALL_MASK);
-    }
+    if (rfix.size() > 0)
+      error->all(FLERR,"Cannot (yet) use rigid bodies with fix deform and Kokkos");
+      //for (i = 0; i < nrigid; i++)
+      //  modify->fix[rfix[i]]->deform(0);
   }
 
   // reset global and local box to new size/shape
@@ -354,13 +355,13 @@ void FixDeformKokkos::end_of_step()
     int nlocal = atom->nlocal;
 
     domainKK->lamda2x(nlocal);
+    //for (i = 0; i < nlocal; i++)
+    //  if (mask[i] & groupbit)
+    //    domain->lamda2x(x[i],x[i]);
 
-    if (rfix.size() > 0) {
-      atomKK->sync(Host,ALL_MASK);
-      for (auto &ifix : rfix)
-        ifix->deform(1);
-      atomKK->modified(Host,ALL_MASK);
-    }
+    //if (nrigid)
+    //  for (i = 0; i < nrigid; i++)
+    //    modify->fix[rfix[i]]->deform(1);
   }
 
   // redo KSpace coeffs since box has changed
