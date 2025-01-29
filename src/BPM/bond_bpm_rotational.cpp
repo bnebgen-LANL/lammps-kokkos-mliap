@@ -523,7 +523,7 @@ void BondBPMRotational::compute(int eflag, int vflag)
     breaking = elastic_forces(i1, i2, type, r_mag, r0_mag, r_mag_inv, rhat, r, r0, force1on2,
                               torque1on2, torque2on1);
 
-    if (breaking >= 1.0) {
+    if ((breaking >= 1.0) && break_flag) {
       bondlist[n][2] = 0;
       process_broken(i1, i2);
       continue;
@@ -684,6 +684,9 @@ void BondBPMRotational::settings(int narg, char **arg)
       error->all(FLERR, "Illegal bond bpm command, invalid argument {}", arg[iarg]);
     }
   }
+
+  if (smooth_flag && !break_flag)
+    error->all(FLERR, "Illegal bond bpm command, must turn off smoothing with break no option");
 }
 
 /* ----------------------------------------------------------------------

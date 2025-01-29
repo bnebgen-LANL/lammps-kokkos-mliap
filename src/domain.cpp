@@ -1668,7 +1668,7 @@ void Domain::remap(double *x)
    adjust 3 image flags encoded in image accordingly
    resulting coord must satisfy lo <= coord < hi
    MAX is important since coord - prd < lo can happen when coord = hi
-   for triclinic, point is converted to lamda coords (0-1) before doing remap
+   for triclinic, point is converted to lamda coords (0-1) within remap()
    image = 10 bits for each dimension
    increment/decrement in wrap-around fashion
 ------------------------------------------------------------------------- */
@@ -1679,9 +1679,7 @@ void Domain::remap_all()
   imageint *image = atom->image;
   int nlocal = atom->nlocal;
 
-  if (triclinic) x2lamda(nlocal);
   for (int i = 0; i < nlocal; i++) remap(x[i],image[i]);
-  if (triclinic) lamda2x(nlocal);
 }
 
 /* ----------------------------------------------------------------------

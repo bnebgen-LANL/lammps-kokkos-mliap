@@ -103,7 +103,7 @@ void CreateAtoms::command(int narg, char **arg)
     style = REGION;
     if (narg < 3) utils::missing_cmd_args(FLERR, "create_atoms region", error);
     region = domain->get_region_by_id(arg[2]);
-    if (!region) error->all(FLERR, "Create_atoms region {} does not exist", arg[2]);
+    if (!region) error->all(FLERR, 2, "Create_atoms region {} does not exist", arg[2]);
     region->init();
     region->prematch();
     iarg = 3;
@@ -127,7 +127,7 @@ void CreateAtoms::command(int narg, char **arg)
       region = nullptr;
     else {
       region = domain->get_region_by_id(arg[4]);
-      if (!region) error->all(FLERR, "Create_atoms region {} does not exist", arg[4]);
+      if (!region) error->all(FLERR, 4, "Create_atoms region {} does not exist", arg[4]);
       region->init();
       region->prematch();
     }
@@ -138,7 +138,7 @@ void CreateAtoms::command(int narg, char **arg)
     meshfile = arg[2];
     iarg = 3;
   } else
-    error->all(FLERR, "Unknown create_atoms command option {}", arg[1]);
+    error->all(FLERR, 1, "Unknown create_atoms command option {}", arg[1]);
 
   // process optional keywords
 

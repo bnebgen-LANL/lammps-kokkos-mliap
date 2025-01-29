@@ -27,7 +27,7 @@
 using namespace LAMMPS_NS;
 using namespace MathConst;
 
-static constexpr double SMALL = 2.0e-308;
+static constexpr double SMALL = 2.3e-308;
 
 /* ---------------------------------------------------------------------- */
 

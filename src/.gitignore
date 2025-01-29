@@ -95,6 +95,8 @@
 /angle_lepton.h
 /dihedral_lepton.cpp
 /dihedral_lepton.h
+/fix_efield_lepton.cpp
+/fix_efield_lepton.h
 /fix_wall_lepton.cpp
 /fix_wall_lepton.h
 /lepton_utils.cpp
@@ -250,6 +252,8 @@
 /*rheo*.cpp
 /*rheo*.h
 
+/compute_gaussian_grid_local.cpp
+/compute_gaussian_grid_local.h
 /compute_grid.cpp
 /compute_grid.h
 /compute_grid_local.cpp
@@ -507,6 +511,8 @@
 /angle_harmonic.h
 /angle_mm3.cpp
 /angle_mm3.h
+/angle_mwlc.cpp
+/angle_mwlc.h
 /angle_quartic.cpp
 /angle_quartic.h
 /angle_spica.cpp
@@ -845,6 +851,8 @@
 /fix_ffl.h
 /fix_filter_corotate.cpp
 /fix_filter_corotate.h
+/fix_granular_mdr.cpp
+/fix_granular_mdr.h
 /fix_viscosity.cpp
 /fix_viscosity.h
 /fix_ehex.cpp
@@ -988,6 +996,8 @@
 /fix_qeq_reaxff.h
 /fix_qmmm.cpp
 /fix_qmmm.h
+/fix_qtpie_reaxff.cpp
+/fix_qtpie_reaxff.h
 /fix_reaxff.cpp
 /fix_reaxff.h
 /fix_reaxff_bonds.cpp
@@ -1215,6 +1225,9 @@
 /pair_dipole_cut.h
 /pair_dipole_sf.cpp
 /pair_dipole_sf.h
+/d3_parameters.h
+/pair_dispersion_d3.h
+/pair_dispersion_d3.cpp
 /pair_dsmc.cpp
 /pair_dsmc.h
 /pair_e3b.cpp

@@ -126,6 +126,7 @@ MODULE LIBLAMMPS
     PROCEDURE :: set_variable           => lmp_set_variable
     PROCEDURE :: set_string_variable    => lmp_set_string_variable
     PROCEDURE :: set_internal_variable  => lmp_set_internal_variable
+    PROCEDURE :: eval                   => lmp_eval
     PROCEDURE, PRIVATE :: lmp_gather_atoms_int
     PROCEDURE, PRIVATE :: lmp_gather_atoms_double
     GENERIC   :: gather_atoms           => lmp_gather_atoms_int, &
@@ -618,7 +619,14 @@ MODULE LIBLAMMPS
       INTEGER(c_int) :: lammps_set_internal_variable
     END FUNCTION lammps_set_internal_variable
 
-    SUBROUTINE lammps_gather_atoms(handle, name, type, count, data) BIND(C)
+    FUNCTION lammps_eval(handle, expr) BIND(C)
+      IMPORT :: c_ptr, c_double
+      IMPLICIT NONE
+      TYPE(c_ptr), VALUE :: handle, expr
+      REAL(c_double) :: lammps_eval
+    END FUNCTION lammps_eval
+
+    SUBROUTINE lammps_gather_atoms(handle, name, TYPE, count, DATA) BIND(C)
       IMPORT :: c_int, c_ptr
       IMPLICIT NONE
       TYPE(c_ptr), VALUE :: handle, name, data
@@ -1812,7 +1820,7 @@ CONTAINS
   SUBROUTINE lmp_set_internal_variable(self, name, val)
     CLASS(lammps), INTENT(IN) :: self
     CHARACTER(LEN=*), INTENT(IN) :: name
-    REAL(KIND=c_double), INTENT(IN) :: val
+    REAL(c_double), INTENT(IN) :: val
     INTEGER :: err
     TYPE(c_ptr) :: Cname
 
@@ -1825,6 +1833,18 @@ CONTAINS
         // '" [Fortran/set_variable]')
     END IF
   END SUBROUTINE lmp_set_internal_variable
+
+  ! equivalent function to lammps_eval
+  FUNCTION lmp_eval(self, expr)
+    CLASS(lammps), INTENT(IN) :: self
+    CHARACTER(LEN=*), INTENT(IN) :: expr
+    REAL(c_double) :: lmp_eval
+    TYPE(c_ptr) :: Cexpr
+
+    Cexpr = f2c_string(expr)
+    lmp_eval = lammps_eval(self%handle, Cexpr)
+    CALL lammps_free(Cexpr)
+  END FUNCTION lmp_eval
 
   ! equivalent function to lammps_gather_atoms (for integers)
   SUBROUTINE lmp_gather_atoms_int(self, name, count, data)

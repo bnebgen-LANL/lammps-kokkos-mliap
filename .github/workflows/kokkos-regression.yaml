@@ -2,7 +2,7 @@
 name: "Kokkos OpenMP Regression Test"
 
 on:
-  pull_request:
+  push:
     branches:
       - develop
 
@@ -17,9 +17,9 @@ jobs:
     env:
       CCACHE_DIR: ${{ github.workspace }}/.ccache
     strategy:
-      max-parallel: 4
+      max-parallel: 6
       matrix:
-        idx: [ 'pair', 'fix', 'compute', 'misc' ]
+        idx: [ 'pair-0', 'pair-1', 'fix-0', 'fix-1', 'compute', 'misc' ]
 
     steps:
     - name: Checkout repository
@@ -83,6 +83,7 @@ jobs:
               -D PKG_REAXFF=on \
               -D PKG_REPLICA=on \
               -D PKG_SRD=on \
+              -D PKG_SPH=on \
               -D PKG_VORONOI=on \
               -G Ninja
         cmake --build build
@@ -93,9 +94,10 @@ jobs:
       run: |
         source linuxenv/bin/activate
         python3 tools/regression-tests/get_kokkos_input.py \
-               --examples-top-level=examples \
-               --filter-out="balance;fire;gcmc;granregion;mdi;mliap;neb;pace;prd;pour;python;snap"
+               --examples-top-level=examples --batch-size=50 \
+               --filter-out="balance;fire;gcmc;granregion;hyper;mc;mdi;mliap;neb;pace;prd;pour;python;rigid;snap;streitz;shear;ttm"
 
+        export OMP_PROC_BIND=false
         python3 tools/regression-tests/run_tests.py \
                --lmp-bin=build/lmp \
                --config-file=tools/regression-tests/config_kokkos_openmp.yaml \
@@ -103,7 +105,7 @@ jobs:
                --output-file=output-${{ matrix.idx }}.xml \
                --progress-file=progress-${{ matrix.idx }}.yaml \
                --log-file=run-${{ matrix.idx }}.log \
-               --quick-max=100 --verbose
+               --quick-max=100
 
         tar -cvf kokkos-regression-test-${{ matrix.idx }}.tar run-${{ matrix.idx }}.log progress-${{ matrix.idx }}.yaml output-${{ matrix.idx }}.xml
 

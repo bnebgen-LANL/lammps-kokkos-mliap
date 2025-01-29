@@ -9,3 +9,4 @@ Pygments
 six
 pyyaml
 linkchecker
+ipython

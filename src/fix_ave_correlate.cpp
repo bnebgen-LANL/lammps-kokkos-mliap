@@ -466,7 +466,7 @@ void FixAveCorrelate::end_of_step()
   if (fp && comm->me == 0) {
     clearerr(fp);
     if (overwrite) platform::fseek(fp,filepos);
-    fmt::print(fp,"{} {}\n",ntimestep,nrepeat);
+    utils::print(fp,"{} {}\n",ntimestep,nrepeat);
     for (i = 0; i < nrepeat; i++) {
       fprintf(fp,"%d %d %d",i+1,i*nevery,count[i]);
       if (count[i])

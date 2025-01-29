@@ -117,8 +117,11 @@ page on BPMs.
 
 If the *break* keyword is set to *no*, LAMMPS assumes bonds should not break
 during a simulation run. This will prevent some unnecessary calculation.
-However, if a bond reaches a strain greater than :math:`\epsilon_c`,
-it will trigger an error.
+The recommended bond communication distance no longer depends on the value of
+:math:`\epsilon_c` (which is ignored) but instead corresponds to the typical
+heuristic maximum strain used by typical non-bpm bond styles. Similar behavior
+to *break no* can also be attained by setting an arbitrarily high value of
+:math:`\epsilon_c`. One cannot use *break no* with *smooth yes*.
 
 .. versionadded:: TBD
 

@@ -245,7 +245,7 @@ void BondBPMSpring::compute(int eflag, int vflag)
     r = sqrt(rsq);
     e = (r - r0) / r0;
 
-    if (fabs(e) > ecrit[type]) {
+    if ((fabs(e) > ecrit[type]) && break_flag) {
       bondlist[n][2] = 0;
       process_broken(i1, i2);
 
@@ -485,6 +485,9 @@ void BondBPMSpring::settings(int narg, char **arg)
       error->all(FLERR, "Illegal bond bpm command, invalid argument {}", arg[iarg]);
     }
   }
+
+  if (smooth_flag && !break_flag)
+    error->all(FLERR, "Illegal bond bpm command, must turn off smoothing with break no option");
 }
 
 /* ----------------------------------------------------------------------

@@ -141,6 +141,8 @@ extern int    lammps_extract_variable_datatype(void *handle, const char *name);
 extern int    lammps_set_variable(void *, const char *, const char *);
 extern int    lammps_set_string_variable(void *, const char *, const char *);
 extern int    lammps_set_internal_variable(void *, const char *, double);
+extern int    lammps_variable_info(void *handle, int idx, char *buf, int bufsize);
+extern double lammps_eval(void *handle, const char *expr);
 
 extern void   lammps_gather_atoms(void *, char *, int, int, void *);
 extern void   lammps_gather_atoms_concat(void *, char *, int, int, void *);
@@ -332,6 +334,8 @@ extern int    lammps_extract_variable_datatype(void *handle, const char *name);
 extern int    lammps_set_variable(void *, const char *, const char *);
 extern int    lammps_set_string_variable(void *, const char *, const char *);
 extern int    lammps_set_internal_variable(void *, const char *, double);
+extern int    lammps_variable_info(void *handle, int idx, char *buf, int bufsize);
+extern double lammps_eval(void *handle, const char *expr);
 
 extern void   lammps_gather_atoms(void *, char *, int, int, void *);
 extern void   lammps_gather_atoms_concat(void *, char *, int, int, void *);

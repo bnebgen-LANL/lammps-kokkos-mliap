@@ -143,9 +143,10 @@ FixReaxFFSpecies::FixReaxFFSpecies(LAMMPS *lmp, int narg, char **arg) :
   x0 = nullptr;
   clusterID = nullptr;
 
-  int ntmp = 1;
+  int ntmp = atom->nmax;
   memory->create(x0, ntmp, "reaxff/species:x0");
   memory->create(clusterID, ntmp, "reaxff/species:clusterID");
+  memset(clusterID, 0, sizeof(double) * ntmp);
   vector_atom = clusterID;
 
   nmax = 0;
@@ -193,8 +194,7 @@ FixReaxFFSpecies::FixReaxFFSpecies(LAMMPS *lmp, int narg, char **arg) :
       if (iarg + ntypes + 1 > narg)
         utils::missing_cmd_args(FLERR, "fix reaxff/species element", error);
 
-      for (int i = 0; i < ntypes; i++)
-        eletype[i] = arg[iarg + 1 + i];
+      for (int i = 0; i < ntypes; i++) eletype[i] = arg[iarg + 1 + i];
       GetUniqueElements();
       iarg += ntypes + 1;
 
@@ -204,6 +204,7 @@ FixReaxFFSpecies::FixReaxFFSpecies(LAMMPS *lmp, int narg, char **arg) :
       delete[] filedel;
       filedel = utils::strdup(arg[iarg + 1]);
       if (comm->me == 0) {
+        if (fdel) fclose(fdel);
         fdel = fopen(filedel, "w");
         if (!fdel)
           error->one(FLERR, "Cannot open fix reaxff/species delete file {}: {}", filedel,
@@ -261,7 +262,8 @@ FixReaxFFSpecies::FixReaxFFSpecies(LAMMPS *lmp, int narg, char **arg) :
       posflag = 1;
       posfreq = utils::inumeric(FLERR, arg[iarg + 1], false, lmp);
       if (posfreq < nfreq || (posfreq % nfreq != 0))
-        error->all(FLERR, "Incompatible fix reaxff/species postion frequency {}", posfreq);
+        error->all(FLERR, "Incompatible fix reaxff/species position frequency {}",
+                   posfreq);
 
       filepos = new char[255];
       strcpy(filepos, arg[iarg + 2]);
@@ -348,8 +350,7 @@ void FixReaxFFSpecies::setup(int /*vflag*/)
   ntotal = static_cast<int>(atom->natoms);
 
   if (!eleflag) {
-    for (int i = 0; i < ntypes; i++)
-      eletype[i] = reaxff->eletype[i+1];
+    for (int i = 0; i < ntypes; i++) eletype[i] = reaxff->eletype[i + 1];
     GetUniqueElements();
   }
   memory->destroy(Name);
@@ -441,6 +442,7 @@ void FixReaxFFSpecies::Output_ReaxFF_Bonds(bigint ntimestep, FILE * /*fp*/)
     memory->destroy(clusterID);
     memory->create(x0, nmax, "reaxff/species:x0");
     memory->create(clusterID, nmax, "reaxff/species:clusterID");
+    memset(clusterID, 0, sizeof(double) * nmax);
     vector_atom = clusterID;
   }
 
@@ -792,12 +794,12 @@ void FixReaxFFSpecies::WriteFormulas(int Nmole, int Nspec)
         if (itemp != 1) molname += std::to_string(itemp);
       }
     }
-    fmt::print(fp, " {:>11}", molname);
+    utils::print(fp, " {:>11}", molname);
   }
   fputs("\n", fp);
 
-  fmt::print(fp, "{:>11} {:>11} {:>11}", ntimestep, Nmole, Nspec);
-  for (i = 0; i < Nmoltype; i++) fmt::print(fp, " {:>11}", NMol[i]);
+  utils::print(fp, "{:>11} {:>11} {:>11}", ntimestep, Nmole, Nspec);
+  for (i = 0; i < Nmoltype; i++) utils::print(fp, " {:>11}", NMol[i]);
   fputs("\n", fp);
 }
 
@@ -836,7 +838,7 @@ void FixReaxFFSpecies::WritePos(int Nmole, int Nspec)
   for (int j = 0; j < 3; j++) halfbox[j] = box[j] / 2;
 
   if (comm->me == 0) {
-    fmt::print(pos,
+    utils::print(pos,
                "Timestep {} NMole {}  NSpec {}  xlo {:f}  "
                "xhi {:f}  ylo {:f}  yhi {:f}  zlo {:f}  zhi {:f}\n",
                update->ntimestep, Nmole, Nspec, domain->boxlo[0], domain->boxhi[0],
@@ -1060,7 +1062,7 @@ void FixReaxFFSpecies::DeleteSpecies(int Nmole, int Nspec)
       for (int m = 0; m < Nspec; m++) {
         if (deletecount[m] > 0) {
           if (printflag == 0) {
-            fmt::print(fdel, "Timestep {}", update->ntimestep);
+            utils::print(fdel, "Timestep {}", update->ntimestep);
             printflag = 1;
           }
           fprintf(fdel, " %g ", deletecount[m]);
@@ -1083,7 +1085,7 @@ void FixReaxFFSpecies::DeleteSpecies(int Nmole, int Nspec)
         if (deletecount[i]) writeflag = 1;
 
       if (writeflag) {
-        fmt::print(fdel, "{}", update->ntimestep);
+        utils::print(fdel, "{}", update->ntimestep);
         for (i = 0; i < ndelspec; i++) { fprintf(fdel, "\t%g", deletecount[i]); }
         fprintf(fdel, "\n");
         fflush(fdel);

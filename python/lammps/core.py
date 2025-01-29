@@ -59,6 +59,87 @@ class ExceptionCheck:
 
 # -------------------------------------------------------------------------
 
+class command_wrapper(object):
+  def __init__(self, lmp):
+    self.lmp = lmp
+    self.auto_flush = False
+
+  def lmp_print(self, s):
+    """ needed for Python2 compatibility, since print is a reserved keyword """
+    return self.__getattr__("print")(s)
+
+  def __dir__(self):
+    return sorted(set(['angle_coeff', 'angle_style', 'atom_modify', 'atom_style', 'atom_style',
+    'bond_coeff', 'bond_style', 'boundary', 'change_box', 'communicate', 'compute',
+    'create_atoms', 'create_box', 'delete_atoms', 'delete_bonds', 'dielectric',
+    'dihedral_coeff', 'dihedral_style', 'dimension', 'dump', 'fix', 'fix_modify',
+    'group', 'improper_coeff', 'improper_style', 'include', 'kspace_modify',
+    'kspace_style', 'lattice', 'mass', 'minimize', 'min_style', 'neighbor',
+    'neigh_modify', 'newton', 'nthreads', 'pair_coeff', 'pair_modify',
+    'pair_style', 'processors', 'read', 'read_data', 'read_restart', 'region',
+    'replicate', 'reset_timestep', 'restart', 'run', 'run_style', 'thermo',
+    'thermo_modify', 'thermo_style', 'timestep', 'undump', 'unfix', 'units',
+    'variable', 'velocity', 'write_restart'] + self.lmp.available_styles("command")))
+
+  def _wrap_args(self, x):
+      if callable(x):
+          if sys.version_info <  (3,):
+            raise Exception("Passing functions or lambdas directly as arguments is only supported in Python 3 or newer")
+          import hashlib
+          import __main__
+          sha = hashlib.sha256()
+          sha.update(str(x).encode())
+          func_name = f"_lmp_cb_{sha.hexdigest()}"
+          def handler(*args, **kwargs):
+              args = list(args)
+              args[0] = lammps(ptr=args[0])
+              x(*args)
+          setattr(__main__, func_name, handler)
+          return func_name
+      return x
+
+  def __getattr__(self, name):
+    """
+    This method is where the Python 'magic' happens. If a method is not
+    defined by the class command_wrapper, it assumes it is a LAMMPS command. It takes
+    all the arguments, concatinates them to a single string, and executes it using
+    :py:meth:`lammps.command`.
+
+    Starting with Python 3.6 it also supports keyword arguments. key=value is
+    transformed into 'key value'. Note, since these have come last in the
+    parameter list, only a subset of LAMMPS commands can be used with this
+    syntax.
+
+    LAMMPS commands that accept callback functions (such as fix python/invoke)
+    can be passed functions and lambdas directly. The first argument of such
+    callbacks will be an lammps object constructed from the passed LAMMPS
+    pointer.
+
+    :return: line or list of lines of output, None if no output
+    :rtype: list or string
+    """
+    def handler(*args, **kwargs):
+      cmd_args = [name] + [str(self._wrap_args(x)) for x in args]
+
+      if len(kwargs) > 0 and sys.version_info < (3,6):
+         raise Exception("Keyword arguments are only supported in Python 3.6 or newer")
+
+      # Python 3.6+ maintains ordering of kwarg keys
+      for k in kwargs.keys():
+          cmd_args.append(k)
+          if type(kwargs[k]) == bool:
+              cmd_args.append("true" if kwargs[k] else "false")
+          else:
+              cmd_args.append(str(self._wrap_args(kwargs[k])))
+
+      cmd = ' '.join(cmd_args)
+      self.lmp.command(cmd)
+      if self.auto_flush:
+          self.lmp.flush_buffers()
+    return handler
+
+# -------------------------------------------------------------------------
+
 class lammps(object):
   """Create an instance of the LAMMPS Python class.
 
@@ -103,6 +184,8 @@ class lammps(object):
       winpath = os.environ.get("LAMMPSDLLPATH")
     self.lib = None
     self.lmp = None
+    self._cmd = None
+    self._ipython = None
 
     # if a pointer to a LAMMPS object is handed in
     # when being called from a Python interpreter
@@ -339,6 +422,9 @@ class lammps(object):
     self.lib.lammps_extract_variable_datatype.argtypes = [c_void_p, c_char_p]
     self.lib.lammps_extract_variable_datatype.restype = c_int
 
+    self.lib.lammps_eval.argtypes = [c_void_p, c_char_p]
+    self.lib.lammps_eval.restype = c_double
+
     self.lib.lammps_fix_external_get_force.argtypes = [c_void_p, c_char_p]
     self.lib.lammps_fix_external_get_force.restype = POINTER(POINTER(c_double))
 
@@ -506,6 +592,61 @@ class lammps(object):
       from .numpy_wrapper import numpy_wrapper
       self._numpy = numpy_wrapper(self)
     return self._numpy
+
+  # -------------------------------------------------------------------------
+
+  @property
+  def cmd(self):
+    """ Return object that acts as LAMMPS command wrapper
+
+    It provides alternative to :py:meth:`lammps.command` to call LAMMPS
+    commands as if they were regular Python functions and enables auto-complete
+    in interactive Python sessions.
+
+    .. code-block:: python
+
+       from lammps import lammps
+
+       # melt example
+       L = lammps()
+       L.cmd.units("lj")
+       L.cmd.atom_style("atomic")
+       L.cmd.lattice("fcc", 0.8442)
+       L.cmd.region("box block", 0, 10, 0, 10, 0, 10)
+       L.cmd.create_box(1, "box")
+       L.cmd.create_atoms(1, "box")
+       L.cmd.mass(1, 1.0)
+       L.cmd.velocity("all create", 3.0, 87287, "loop geom")
+       L.cmd.pair_style("lj/cut", 2.5)
+       L.cmd.pair_coeff(1, 1, 1.0, 1.0, 2.5)
+       L.cmd.neighbor(0.3, "bin")
+       L.cmd.neigh_modify(every=20, delay=0, check=False)
+       L.cmd.fix(1, "all nve")
+       L.cmd.thermo(50)
+       L.cmd.run(250)
+
+    :return: instance of command_wrapper object
+    :rtype: command_wrapper
+    """
+    if not self._cmd:
+      self._cmd = command_wrapper(self)
+    return self._cmd
+
+  # -------------------------------------------------------------------------
+
+  @property
+  def ipython(self):
+    """ Return object to access ipython extensions
+
+    Adds commands for visualization in IPython and Jupyter Notebooks.
+
+    :return: instance of ipython wrapper object
+    :rtype: ipython.wrapper
+    """
+    if not self._ipython:
+      from .ipython import wrapper
+      self._ipython = wrapper(self)
+    return self._ipython
 
   # -------------------------------------------------------------------------
 
@@ -1530,6 +1671,29 @@ class lammps(object):
     else: return -1
     with ExceptionCheck(self):
       return self.lib.lammps_set_internal_variable(self.lmp,newname,value)
+
+  # -------------------------------------------------------------------------
+
+  def eval(self, expr):
+    """ Evaluate a LAMMPS immediate variable expression
+
+    .. versionadded:: TBD
+
+    This function is a wrapper around the function :cpp:func:`lammps_eval`
+    of the C library interface.  It evaluates and expression like in
+    immediate variables and returns the value.
+
+    :param expr: immediate variable expression
+    :type name: string
+    :return: the result of the evaluation
+    :rtype: c_double
+    """
+
+    if expr: newexpr = expr.encode()
+    else: return None
+
+    with ExceptionCheck(self):
+      return self.lib.lammps_eval(self.lmp, newexpr)
 
   # -------------------------------------------------------------------------
 
