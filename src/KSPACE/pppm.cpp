@@ -150,11 +150,12 @@ PPPM::PPPM(LAMMPS *lmp) : KSpace(lmp),
 
 void PPPM::settings(int narg, char **arg)
 {
-  if (narg < 1) error->all(FLERR,"Illegal kspace_style {} command", force->kspace_style);
+  if (narg < 1)
+    utils::missing_cmd_args(FLERR,fmt::format("kspace_style {}", force->kspace_style), error);
 
   accuracy_relative = fabs(utils::numeric(FLERR,arg[0],false,lmp));
   if (accuracy_relative > 1.0)
-    error->all(FLERR, "Invalid relative accuracy {:g} for kspace_style {}",
+    error->all(FLERR, 1, "Invalid relative accuracy {:g} for kspace_style {}",
                accuracy_relative, force->kspace_style);
 }
 
@@ -1802,7 +1803,7 @@ void PPPM::particle_map()
   int flag = 0;
 
   if (!std::isfinite(boxlo[0]) || !std::isfinite(boxlo[1]) || !std::isfinite(boxlo[2]))
-    error->one(FLERR,"Non-numeric box dimensions - simulation unstable");
+    error->one(FLERR,"Non-numeric box dimensions - simulation unstable" + utils::errorurl(6));
 
   for (int i = 0; i < nlocal; i++) {
 
@@ -1829,7 +1830,7 @@ void PPPM::particle_map()
       flag = 1;
   }
 
-  if (flag) error->one(FLERR,"Out of range atoms - cannot compute PPPM");
+  if (flag) error->one(FLERR, Error::NOLASTLINE, "Out of range atoms - cannot compute PPPM" + utils::errorurl(4));
 }
 
 /* ----------------------------------------------------------------------

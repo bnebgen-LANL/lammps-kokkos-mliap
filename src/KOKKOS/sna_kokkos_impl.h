@@ -896,14 +896,12 @@ void SNAKokkos<DeviceType, real_type, vector_length>::compute_bi(const int& iato
 
   if constexpr (chemsnap) {
     int itriple = 0;
-    int idouble = 0;
     for (int elem1 = 0; elem1 < nelements; elem1++) {
       for (int elem2 = 0; elem2 < nelements; elem2++) {
         for (int elem3 = 0; elem3 < nelements; elem3++) {
           blist(iatom, itriple, jjb) = evaluate_bi(j, jjz, jju, iatom, elem1, elem2, elem3);
           itriple++;
         } // end loop over elem3
-        idouble++;
       } // end loop over elem2
     } // end loop over elem1
   } else {

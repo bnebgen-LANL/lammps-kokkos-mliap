@@ -203,7 +203,7 @@ LAMMPS.
       check if the detected or selected compiler is compatible with the
       C++ support requirements of LAMMPS and stop with an error, if this
       is not the case.  A C++11 compatible compiler is currently
-      required, but a transition to require C++17 is in progess and
+      required, but a transition to require C++17 is in progress and
       planned to be completed in Summer 2025. Currently, setting
       ``-DLAMMPS_CXX11=yes`` is required when configuring with CMake while
       using a C++11 compatible compiler that does not support C++17,
@@ -329,7 +329,7 @@ LAMMPS.
          either as a binary package or through compiling from source.
 
       While a C++11 compatible compiler is currently sufficient to compile
-      LAMMPS, a transition to require C++17 is in progess and planned to
+      LAMMPS, a transition to require C++17 is in progress and planned to
       be completed in Summer 2025. Currently, setting ``-DLAMMPS_CXX11``
       in the ``LMP_INC =`` line in the machine makefile is required when
       using a C++11 compatible compiler that does not support C++17.

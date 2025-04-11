@@ -560,7 +560,6 @@ double GranSubModNormalMDR::calculate_forces()
   double *dRdenominator = atom->dvector[index_dRdenominator];
   double *Acon0 = atom->dvector[index_Acon0];
   double *Acon1 = atom->dvector[index_Acon1];
-  double *Atot = atom->dvector[index_Atot];
   double *Atot_sum = atom->dvector[index_Atot_sum];
   double *ddelta_bar = atom->dvector[index_ddelta_bar];
   double *psi = atom->dvector[index_psi];
@@ -668,7 +667,6 @@ double GranSubModNormalMDR::calculate_forces()
 
     // temporary i and j indices
     const int i = gm->i;
-    const int j = gm->j;
 
     // geometric property definitions
     const double Ro = Rinitial[i];              // initial radius
@@ -773,7 +771,6 @@ double GranSubModNormalMDR::calculate_forces()
 
     double Ainvsq = Ainv * Ainv;
     double Asq = A * A;
-    double A3 = Asq * A;
     double A4 = Asq * Asq;
 
     double Binv = 1.0 / B;
@@ -919,7 +916,6 @@ double GranSubModNormalMDR::calculate_forces()
     const double eps_bar_contact = (fx * bx + fy * by + fz * bz) / (3 * kappa * Velas[i]);
     if (history_update) eps_bar[i] += eps_bar_contact;
 
-    double desp_bar_contact = eps_bar_contact - *eps_bar_offset;
     if (history_update && delta_MDR == deltamax_MDR && *Yflag_offset > 0.0 && F_MDR > 0.0) {
       const double Vo = FOURTHIRDS * MY_PI * pow(Ro, 3);
       dRnumerator[i] -= Vo * (eps_bar_contact - *eps_bar_offset);

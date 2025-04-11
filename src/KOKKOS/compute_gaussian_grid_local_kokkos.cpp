@@ -217,15 +217,6 @@ void ComputeGaussianGridLocalKokkos<DeviceType>::operator() (TagComputeGaussianG
   // extract grid index
   int igrid = ii + chunk_offset;
 
-  // get a pointer to scratch memory
-  // This is used to cache whether or not an atom is within the cutoff.
-  // If it is, type_cache is assigned to the atom type.
-  // If it's not, it's assigned to -1.
-  const int tile_size = ntotal; //max_neighs; // number of elements per thread
-  const int team_rank = team.team_rank();
-  const int scratch_shift = team_rank * tile_size; // offset into pointer for entire team
-  int* type_cache = (int*)team.team_shmem().get_shmem(team.team_size() * tile_size * sizeof(int), 0) + scratch_shift;
-
   // convert to grid indices
 
   int iz = igrid/(xlen*ylen);
@@ -278,16 +269,6 @@ void ComputeGaussianGridLocalKokkos<DeviceType>::operator() (TagComputeGaussianG
   d_alocal(igrid, 3) = xtmp;
   d_alocal(igrid, 4) = ytmp;
   d_alocal(igrid, 5) = ztmp;
-
-  // currently, all grid points are type 1
-  // not clear what a better choice would be
-  const int itype = 1;
-  int ielem = 0;
-  ielem = d_map[itype];
-  const double radi = d_radelem[ielem];
-
-  // Compute the number of neighbors, store rsq
-  int ninside = 0;
 
   // Looping over ntotal for now.
   for (int j = 0; j < ntotal; j++){

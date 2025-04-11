@@ -566,10 +566,6 @@ LAMMPS::LAMMPS(int narg, char **arg, MPI_Comm communicator) :
       if (!helpflag)
         utils::logmesg(this,"LAMMPS ({}{})\n", version, update_string);
 
-     // warn against using I/O redirection in parallel runs
-      if ((inflag == 0) && (universe->nprocs > 1))
-        error->warning(FLERR, "Using I/O redirection is unreliable with parallel runs. "
-                       "Better to use the -in switch to read input files.");
       utils::flush_buffers(this);
     }
 
@@ -649,18 +645,24 @@ LAMMPS::LAMMPS(int narg, char **arg, MPI_Comm communicator) :
     }
 
     // screen and logfile messages for universe and world
+    std::string update_string = UPDATE_STRING;
+    if (has_git_info() && ((update_string == " - Development")
+                           || (update_string == " - Maintenance")))
+      update_string += fmt::format(" - {}", git_descriptor());
 
     if ((universe->me == 0) && (!helpflag)) {
-      constexpr char fmt[] = "LAMMPS ({})\nRunning on {} partitions of processors\n";
+
+      constexpr char fmt[] = "LAMMPS ({}{})\nRunning on {} partitions of processors\n";
       if (universe->uscreen)
-        utils::print(universe->uscreen,fmt,version,universe->nworlds);
+        utils::print(universe->uscreen, fmt, version, update_string, universe->nworlds);
 
       if (universe->ulogfile)
-        utils::print(universe->ulogfile,fmt,version,universe->nworlds);
+        utils::print(universe->ulogfile, fmt, version, update_string, universe->nworlds);
     }
 
     if ((me == 0) && (!helpflag))
-      utils::logmesg(this,"LAMMPS ({})\nProcessor partition = {}\n", version, universe->iworld);
+      utils::logmesg(this,"LAMMPS ({}{})\nProcessor partition = {}\n", version,
+                     update_string, universe->iworld);
   }
 
   // check consistency of datatype settings in lmptype.h
@@ -690,11 +692,6 @@ LAMMPS::LAMMPS(int narg, char **arg, MPI_Comm communicator) :
 #ifdef LAMMPS_BIGBIG
   if (sizeof(smallint) != 4 || sizeof(imageint) != 8 ||
       sizeof(tagint) != 8 || sizeof(bigint) != 8)
-    error->all(FLERR,"Small to big integers are not sized correctly");
-#endif
-#ifdef LAMMPS_SMALLSMALL
-  if (sizeof(smallint) != 4 || sizeof(imageint) != 4 ||
-      sizeof(tagint) != 4 || sizeof(bigint) != 4)
     error->all(FLERR,"Small to big integers are not sized correctly");
 #endif
 
@@ -1485,8 +1482,6 @@ void LAMMPS::print_config(FILE *fp)
   fputs("-DLAMMPS_BIGBIG\n",fp);
 #elif defined(LAMMPS_SMALLBIG)
   fputs("-DLAMMPS_SMALLBIG\n",fp);
-#else // defined(LAMMPS_SMALLSMALL)
-  fputs("-DLAMMPS_SMALLSMALL\n",fp);
 #endif
 
   utils::print(fp,"sizeof(smallint): {}-bit\n"
