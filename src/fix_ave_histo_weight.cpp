@@ -198,7 +198,7 @@ void FixAveHistoWeight::end_of_step()
       if (j == 0) weight = val1.val.f->compute_scalar();
       else weight = val1.val.f->compute_vector(j-1);
     } else if (kind == GLOBAL && mode == VECTOR) {
-      error->all(FLERR,"Fix ave/histo/weight option not yet supported");
+      error->all(FLERR, Error::NOLASTLINE, "Fix ave/histo/weight option not yet supported");
       // NOTE: need to allocate local storage
       if (j == 0) {
         int n = val1.val.f->size_vector;
@@ -465,7 +465,7 @@ void FixAveHistoWeight::end_of_step()
         fprintf(fp,"%d %g %g %g\n",i+1,coord[i],0.0,0.0);
 
     if (ferror(fp))
-      error->one(FLERR,"Error writing out histogram data");
+      error->one(FLERR, Error::NOLASTLINE, "Error writing out histogram data");
 
     fflush(fp);
     if (overwrite) {

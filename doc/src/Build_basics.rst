@@ -203,7 +203,7 @@ LAMMPS.
       check if the detected or selected compiler is compatible with the
       C++ support requirements of LAMMPS and stop with an error, if this
       is not the case.  A C++11 compatible compiler is currently
-      required, but a transition to require C++17 is in progess and
+      required, but a transition to require C++17 is in progress and
       planned to be completed in Summer 2025. Currently, setting
       ``-DLAMMPS_CXX11=yes`` is required when configuring with CMake while
       using a C++11 compatible compiler that does not support C++17,
@@ -212,11 +212,7 @@ LAMMPS.
       You can tell CMake to look for a specific compiler with setting
       CMake variables (listed below) during configuration.  For a few
       common choices, there are also presets in the ``cmake/presets``
-      folder.  For convenience, there is a ``CMAKE_TUNE_FLAGS`` variable
-      that can be set to apply global compiler options (applied to
-      compilation only), to be used for adding compiler or host specific
-      optimization flags in addition to the "flags" variables listed
-      below. You may also specify the corresponding ``CMAKE_*_FLAGS``
+      folder.  You may also specify the corresponding ``CMAKE_*_FLAGS``
       variables individually, if you want to experiment with alternate
       optimization flags.  You should specify all 3 compilers, so that
       the (few) LAMMPS source files written in C or Fortran are built
@@ -265,10 +261,6 @@ LAMMPS.
       will switch to the LLVM based oneAPI Intel compilers,
       ``-C ../cmake/presets/pgi.cmake`` will switch the compiler to the PGI compilers,
       and ``-C ../cmake/presets/nvhpc.cmake`` will switch to the NVHPC compilers.
-
-      Furthermore, you can set ``CMAKE_TUNE_FLAGS`` to specifically add
-      compiler flags to tune for optimal performance on given hosts.
-      This variable is empty by default.
 
       .. note::
 
@@ -329,7 +321,7 @@ LAMMPS.
          either as a binary package or through compiling from source.
 
       While a C++11 compatible compiler is currently sufficient to compile
-      LAMMPS, a transition to require C++17 is in progess and planned to
+      LAMMPS, a transition to require C++17 is in progress and planned to
       be completed in Summer 2025. Currently, setting ``-DLAMMPS_CXX11``
       in the ``LMP_INC =`` line in the machine makefile is required when
       using a C++11 compatible compiler that does not support C++17.

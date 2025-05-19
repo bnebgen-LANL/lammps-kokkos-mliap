@@ -203,6 +203,7 @@ processed in the expected order before types are removed from dynamic
 dispatch.
 
 .. admonition:: Important Notes
+   :class: note
 
    In order to be able to detect incompatibilities at compile time and
    to avoid unexpected behavior, it is crucial that all member functions

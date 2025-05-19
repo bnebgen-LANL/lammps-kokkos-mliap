@@ -45,7 +45,7 @@ namespace utils {
    *
 \verbatim embed:rst
 
-.. versionadded:: TBD
+.. versionadded:: 4Feb2025
 
 This function compares two strings while skipping over any kind of whitespace
 (blank, tab, newline, carriage return, etc.).
@@ -62,7 +62,7 @@ This function compares two strings while skipping over any kind of whitespace
    *
 \verbatim embed:rst
 
-.. versionadded:: TBD
+.. versionadded:: 4Feb2025
 
 This function compresses whitespace in a string to just a single blank.
 
@@ -96,7 +96,7 @@ This function compresses whitespace in a string to just a single blank.
    *
 \verbatim embed:rst
 
-.. versionadded:: TBD
+.. versionadded:: 4Feb2025
 
 This function is a helper function for error messages.  It creates extra output
 in error messages.  It will produce either two or three lines: the original last
@@ -147,7 +147,7 @@ output are compressed to a single blank by calling :cpp:func:`strcompress()`
    *
 \verbatim embed:rst
 
-.. versionadded:: TBD
+.. versionadded:: 4Feb2025
 
 \endverbatim
    *
@@ -173,11 +173,12 @@ output are compressed to a single blank by calling :cpp:func:`strcompress()`
    *
    * The LAMMPS manual contains detailed explanations for errors and
    * warnings where a simple error message may not be sufficient.  These can
-   * be reached through URLs with a numeric code.  This function creates the
+   * be reached through URLs with a numeric code > 0.  This function creates the
    * corresponding text to be included into the error message that redirects
-   * the user to that URL.
+   * the user to that URL.  Using an error code of 0 returns a message
+   * pointing to a URL discussing error messages in general.
    *
-   *  \param errorcode   number pointing to a paragraph in the manual */
+   *  \param errorcode   non-negative number pointing to a paragraph in the manual */
 
   std::string errorurl(int errorcode);
 

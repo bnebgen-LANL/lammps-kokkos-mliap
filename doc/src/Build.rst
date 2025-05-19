@@ -17,6 +17,7 @@ section of the manual.
 .. toctree::
    :maxdepth: 1
 
+   Build_prerequisites
    Build_cmake
    Build_make
    Build_link

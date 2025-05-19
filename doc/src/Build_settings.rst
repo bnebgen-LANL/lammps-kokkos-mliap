@@ -8,29 +8,30 @@ Optional build settings
 LAMMPS can be built with several optional settings.  Each subsection
 explains how to do this for building both with CMake and make.
 
-* `C++11 standard compliance`_ when building all of LAMMPS
+* `C++11 and C++17 standard compliance`_ when building all of LAMMPS
 * `FFT library`_ for use with the :doc:`kspace_style pppm <kspace_style>` command
 * `Size of LAMMPS integer types and size limits`_
 * `Read or write compressed files`_
 * `Output of JPEG, PNG, and movie files`_ via the :doc:`dump image <dump_image>` or :doc:`dump movie <dump_image>` commands
-* `Support for downloading files`_
+* `Support for downloading files from the input`_
+* `Prevent download of large potential files`_
 * `Memory allocation alignment`_
 * `Workaround for long long integers`_
 * `Exception handling when using LAMMPS as a library`_ to capture errors
-* `Trigger selected floating-point exceptions`_
 
 ----------
 
 .. _cxx11:
 
-C++11 standard compliance
--------------------------
+C++11 and C++17 standard compliance
+-----------------------------------
 
-A C++11 standard compatible compiler is a requirement for compiling LAMMPS.
-LAMMPS version 3 March 2020 is the last version compatible with the previous
-C++98 standard for the core code and most packages. Most currently used
-C++ compilers are compatible with C++11, but some older ones may need extra
-flags to enable C++11 compliance.  Example for GNU c++ 4.8.x:
+A C++11 standard compatible compiler is currently the minimum
+requirement for compiling LAMMPS.  LAMMPS version 3 March 2020 is the
+last version compatible with the previous C++98 standard for the core
+code and most packages. Most currently used C++ compilers are compatible
+with C++11, but some older ones may need extra flags to enable C++11
+compliance.  Example for GNU c++ 4.8.x:
 
 .. code-block:: make
 
@@ -39,6 +40,17 @@ flags to enable C++11 compliance.  Example for GNU c++ 4.8.x:
 Individual packages may require compliance with a later C++ standard
 like C++14 or C++17.  These requirements will be documented with the
 :doc:`individual packages <Packages_details>`.
+
+.. versionchanged:: 4Feb2025
+
+Starting with LAMMPS version 4 February 2025 we are starting a
+transition to require the C++17 standard.  Most current compilers are
+compatible and if the C++17 standard is available by default, LAMMPS
+will enable C++17 and will compile normally.  If the chosen compiler is
+not compatible with C++17, but only supports C++11, then the define
+-DLAMMPS_CXX11 is required to fall back to compiling with a C++11
+compiler.  After the next stable release of LAMMPS in summer 2025, the
+LAMMPS development branch and future releases will require C++17.
 
 ----------
 
@@ -303,7 +315,7 @@ large counters can become before "rolling over".  The default setting of
 
       .. code-block:: bash
 
-         -D LAMMPS_SIZES=value   # smallbig (default) or bigbig or smallsmall
+         -D LAMMPS_SIZES=value   # smallbig (default) or bigbig
 
       If the variable is not set explicitly, "smallbig" is used.
 
@@ -314,7 +326,7 @@ large counters can become before "rolling over".  The default setting of
 
       .. code-block:: make
 
-         LMP_INC = -DLAMMPS_SMALLBIG    # or -DLAMMPS_BIGBIG or -DLAMMPS_SMALLSMALL
+         LMP_INC = -DLAMMPS_SMALLBIG    # or -DLAMMPS_BIGBIG
 
       The default setting is ``-DLAMMPS_SMALLBIG`` if nothing is specified
 
@@ -323,34 +335,27 @@ LAMMPS system size restrictions
 
 .. list-table::
    :header-rows: 1
-   :widths: 18 27 28 27
+   :widths: 27 36 37
    :align: center
 
    * -
      - smallbig
      - bigbig
-     - smallsmall
    * - Total atom count
      - :math:`2^{63}` atoms (= :math:`9.223 \cdot 10^{18}`)
      - :math:`2^{63}` atoms (= :math:`9.223 \cdot 10^{18}`)
-     - :math:`2^{31}` atoms (= :math:`2.147 \cdot 10^9`)
    * - Total timesteps
      - :math:`2^{63}` steps (= :math:`9.223 \cdot 10^{18}`)
      - :math:`2^{63}` steps (= :math:`9.223 \cdot 10^{18}`)
-     - :math:`2^{31}` steps (= :math:`2.147 \cdot 10^9`)
    * - Atom ID values
      - :math:`1 \le i \le 2^{31} (= 2.147 \cdot 10^9)`
      - :math:`1 \le i \le 2^{63} (= 9.223 \cdot 10^{18})`
-     - :math:`1 \le i \le 2^{31} (= 2.147 \cdot 10^9)`
    * - Image flag values
      - :math:`-512 \le i \le 511`
      - :math:`- 1\,048\,576 \le i \le 1\,048\,575`
-     - :math:`-512 \le i \le 511`
 
 The "bigbig" setting increases the size of image flags and atom IDs over
-"smallbig" and the "smallsmall" setting is only needed if your machine
-does not support 64-bit integers or incurs performance penalties when
-using them.
+the default "smallbig" setting.
 
 These are limits for the core of the LAMMPS code, specific features or
 some styles may impose additional limits.  The :ref:`ATC
@@ -504,8 +509,8 @@ during a run.
 
 .. _libcurl:
 
-Support for downloading files
------------------------------
+Support for downloading files from the input
+--------------------------------------------
 
 .. versionadded:: 29Aug2024
 
@@ -545,6 +550,25 @@ LAMMPS is compiled accordingly which needs the following settings:
       if make can find the libcurl header and library files in their
       default system locations.  You must specify ``CURL_LIB`` with a
       paths or linker flags to link to libcurl.
+
+----------
+
+.. _download_pot:
+
+Prevent download of large potential files
+-----------------------------------------
+
+.. versionadded:: 8Feb2023
+
+LAMMPS bundles a selection of potential files in the ``potentials``
+folder as examples of how those kinds of potential files look like and
+for use with the provided input examples in the ``examples`` tree.  To
+keep the size of the distributed LAMMPS source package small, very large
+potential files (> 5 MBytes) are not bundled, but only downloaded on
+demand when the :doc:`corresponding package <Packages_list>` is
+installed.  This automatic download can be prevented when :doc:`building
+LAMMPS with CMake <Build_cmake>` by adding the setting `-D
+DOWNLOAD_POTENTIALS=off` when configuring.
 
 ----------
 
@@ -634,40 +658,3 @@ code has to be set up to *catch* exceptions thrown from within LAMMPS.
    throw an exception and thus other MPI ranks may get stuck waiting for
    messages from the ones with errors.
 
-----------
-
-.. _trap_fpe:
-
-Trigger selected floating-point exceptions
-------------------------------------------
-
-Many kinds of CPUs have the capability to detect when a calculation
-results in an invalid math operation, like a division by zero or calling
-the square root with a negative argument.  The default behavior on
-most operating systems is to continue and have values for ``NaN`` (= not
-a number) or ``Inf`` (= infinity).  This allows software to detect and
-recover from such conditions.  This behavior can be changed, however,
-often through use of compiler flags.  On Linux systems (or more general
-on systems using the GNU C library), these so-called floating-point traps
-can also be selectively enabled through library calls.  LAMMPS supports
-that by setting the ``-DLAMMPS_TRAP_FPE`` pre-processor define.  As it is
-done in the ``main()`` function, this applies only to the standalone
-executable, not the library.
-
-.. tabs::
-
-   .. tab:: CMake build
-
-      .. code-block:: bash
-
-         -D CMAKE_TUNE_FLAGS=-DLAMMPS_TRAP_FPE
-
-   .. tab:: Traditional make
-
-      .. code-block:: make
-
-         LMP_INC = -DLAMMPS_TRAP_FPE  <other LMP_INC settings>
-
-After compilation with this flag set, the LAMMPS executable will stop
-and produce a core dump when a division by zero, overflow, illegal math
-function argument or other invalid floating point operation is encountered.

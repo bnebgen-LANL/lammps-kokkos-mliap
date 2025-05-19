@@ -164,10 +164,6 @@ void PairSNAPKokkos<DeviceType, real_type, vector_length>::compute(int eflag_in,
   max_neighs = 0;
   Kokkos::parallel_reduce("PairSNAPKokkos::find_max_neighs",inum, FindMaxNumNeighs<DeviceType>(k_list), Kokkos::Max<int>(max_neighs));
 
-  int team_size_default = 1;
-  if constexpr (!host_flag)
-    team_size_default = 32;//max_neighs;
-
   if (beta_max < inum) {
     beta_max = inum;
     // padded allocation, similar to within grow_rij
@@ -198,8 +194,7 @@ void PairSNAPKokkos<DeviceType, real_type, vector_length>::compute(int eflag_in,
 
     // ComputeNeigh
     if constexpr (host_flag) {
-      int team_size = team_size_default;
-      check_team_size_for<TagPairSNAPComputeNeighCPU>(chunk_size,team_size);
+      int team_size = 1;
       typename Kokkos::TeamPolicy<DeviceType,TagPairSNAPComputeNeighCPU> policy_neigh(chunk_size,team_size,vector_length);
       Kokkos::parallel_for("ComputeNeighCPU",policy_neigh,*this);
     } else {
@@ -1346,30 +1341,6 @@ double PairSNAPKokkos<DeviceType, real_type, vector_length>::memory_usage()
   bytes += MemKK::memory_usage(d_sinnerelem);
   bytes += MemKK::memory_usage(d_dinnerelem);
   return bytes;
-}
-
-/* ---------------------------------------------------------------------- */
-
-template<class DeviceType, typename real_type, int vector_length>
-template<class TagStyle>
-void PairSNAPKokkos<DeviceType, real_type, vector_length>::check_team_size_for(int inum, int &team_size) {
-  int team_size_max;
-
-  team_size_max = Kokkos::TeamPolicy<DeviceType,TagStyle>(inum,Kokkos::AUTO).team_size_max(*this,Kokkos::ParallelForTag());
-
-  if (team_size*vector_length > team_size_max)
-    team_size = team_size_max/vector_length;
-}
-
-template<class DeviceType, typename real_type, int vector_length>
-template<class TagStyle>
-void PairSNAPKokkos<DeviceType, real_type, vector_length>::check_team_size_reduce(int inum, int &team_size) {
-  int team_size_max;
-
-  team_size_max = Kokkos::TeamPolicy<DeviceType,TagStyle>(inum,Kokkos::AUTO).team_size_max(*this,Kokkos::ParallelReduceTag());
-
-  if (team_size*vector_length > team_size_max)
-    team_size = team_size_max/vector_length;
 }
 
 template<class DeviceType, typename real_type, int vector_length>

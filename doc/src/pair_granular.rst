@@ -30,6 +30,9 @@ Examples
    pair_coeff * * hertz/material 1e8 0.3 0.3 tangential mindlin_rescale NULL 1.0 0.4 damping tsuji
 
    pair_style granular
+   pair_coeff * * hertz/material 1e8 0.3 0.3 tangential mindlin_rescale NULL 1.0 0.4 damping coeff_restitution synchronized_verlet
+
+   pair_style granular
    pair_coeff 1 * jkr 1000.0 500.0 0.3 10 tangential mindlin 800.0 1.0 0.5 rolling sds 500.0 200.0 0.5 twisting marshall
    pair_coeff 2 2 hertz 200.0 100.0 tangential linear_history 300.0 1.0 0.1 rolling sds 200.0 100.0 0.1 twisting marshall
 
@@ -41,7 +44,7 @@ Examples
    pair_coeff * * hertz 1000.0 50.0 tangential mindlin 1000.0 1.0 0.4 heat area 0.1
 
    pair_style granular
-   pair_coeff * * mdr 5e6 0.4 1.9e5 2.0 0.5 0.5 tangential linear_history 940.0 0.0 0.7 rolling sds 2.7e5 0.0 0.6 damping none
+   pair_coeff * * mdr 5e6 0.4 1.9e5 2.0 0.5 0.5 tangential linear_history 940.0 1.0 0.7 rolling sds 2.7e5 0.0 0.6 damping mdr 1
 
 Description
 """""""""""
@@ -85,7 +88,8 @@ and their required arguments are:
 3. *hertz/material* : E, :math:`\eta_{n0}` (or :math:`e`), :math:`\nu`
 4. *dmt* : E, :math:`\eta_{n0}` (or :math:`e`), :math:`\nu`, :math:`\gamma`
 5. *jkr* : E, :math:`\eta_{n0}` (or :math:`e`), :math:`\nu`, :math:`\gamma`
-6. *mdr* : :math:`E`, :math:`\nu`, :math:`Y`, :math:`\Delta\gamma`, :math:`\psi_b`, :math:`e`
+6. *mdr* : :math:`E`, :math:`\nu`, :math:`Y`, :math:`\Delta\gamma`,
+   :math:`\psi_b`, :math:`\eta_{n0}`
 
 Here, :math:`k_n` is spring stiffness (with units that depend on model
 choice, see below); :math:`\eta_{n0}` is a damping prefactor (or, in its
@@ -103,11 +107,12 @@ on particle *i* due to contact with particle *j* is given by:
    \mathbf{F}_{ne, Hooke} = k_n \delta_{ij} \mathbf{n}
 
 Where :math:`\delta_{ij} = R_i + R_j - \|\mathbf{r}_{ij}\|` is the particle
-overlap, :math:`R_i, R_j` are the particle radii, :math:`\mathbf{r}_{ij} = \mathbf{r}_i - \mathbf{r}_j` is the vector separating the two
-particle centers (note the i-j ordering so that :math:`\mathbf{F}_{ne}` is
-positive for repulsion), and :math:`\mathbf{n} = \frac{\mathbf{r}_{ij}}{\|\mathbf{r}_{ij}\|}`.  Therefore,
-for *hooke*, the units of the spring constant :math:`k_n` are
-*force*\ /\ *distance*, or equivalently *mass*\ /*time\^2*.
+overlap, :math:`R_i, R_j` are the particle radii, :math:`\mathbf{r}_{ij} =
+\mathbf{r}_i - \mathbf{r}_j` is the vector separating the two particle centers
+(note the i-j ordering so that :math:`\mathbf{F}_{ne}` is positive for repulsion),
+and :math:`\mathbf{n} = \frac{\mathbf{r}_{ij}}{\|\mathbf{r}_{ij}\|}`.  Therefore,
+for *hooke*, the units of the spring constant :math:`k_n` are *force*\ /\
+*distance*, or equivalently *mass*\ /*time\^2*.
 
 For the *hertz* model, the normal component of force is given by:
 
@@ -173,6 +178,8 @@ two-part series :ref:`Zunker and Kamrin Part I <Zunker2024I>` and
 :ref:`Zunker and Kamrin Part II <Zunker2024II>`. Further development
 and demonstrations of its application to industrially relevant powder
 compaction processes are presented in :ref:`Zunker et al. <Zunker2025>`.
+If you use the *mdr* normal model the only supported damping option is
+the *mdr* damping class described below.
 
 The model requires the following inputs:
 
@@ -196,8 +203,8 @@ The model requires the following inputs:
    triggered. Lower values of :math:`\psi_b` delay the onset of the bulk elastic
    response.
 
-   6. *Coefficient of restitution* :math:`0 \le e \le 1` : The coefficient of
-   restitution is a tunable parameter that controls damping in the normal direction.
+   6. *Damping coefficent* :math:`\eta_{n0} \ge 0` : The damping coefficient
+   is a tunable parameter that controls damping in the normal direction.
 
 .. note::
 
@@ -209,17 +216,11 @@ The *mdr* model produces a nonlinear force-displacement response, therefore the
 critical timestep :math:`\Delta t` depends on the inputs and level of
 deformation. As a conservative starting point the timestep can be assumed to be
 dictated by the bulk elastic response such that
-:math:`\Delta t = 0.35\sqrt{m/k_\textrm{bulk}}`, where :math:`m` is the mass of
+:math:`\Delta t = 0.08\sqrt{m/k_\textrm{bulk}}`, where :math:`m` is the mass of
 the smallest particle and :math:`k_\textrm{bulk} = \kappa R_\textrm{min}` is an
 effective stiffness related to the bulk elastic response.
 Here, :math:`\kappa = E/(3(1-2\nu))` is the bulk modulus and
 :math:`R_\textrm{min}` is the radius of the smallest particle.
-
-.. note::
-
-   The *mdr* model requires some specific settings to function properly,
-   please read the following text carefully to ensure all requirements are
-   followed.
 
 The *atom_style* must be set to *sphere 1* to enable dynamic particle
 radii. The *mdr* model is designed to respect the incompressibility of
@@ -249,16 +250,9 @@ algorithm see :ref:`Zunker et al. <Zunker2025>`.
 
    newton off
 
-The damping model must be set to *none*. The *mdr* model already has a built
-in damping model.
-
-.. code-block:: LAMMPS
-
-   pair_coeff * * mdr 5e6 0.4 1.9e5 2 0.5 0.5 damping none
-
 The definition of multiple *mdr* models in the *pair_style* is currently not
 supported. Similarly, the *mdr* model cannot be combined with a different normal
-model in the *pair_style*. Physically this means that only one homogenous
+model in the *pair_style*. Physically this means that only one homogeneous
 collection of particles governed by a single *mdr* model is allowed.
 
 The *mdr* model currently only supports *fix wall/gran/region*, not
@@ -266,7 +260,7 @@ The *mdr* model currently only supports *fix wall/gran/region*, not
 any *fix wall/gran/region* commands must also use the *mdr* model.
 Additionally, the following *mdr* inputs must match between the
 *pair_style* and *fix wall/gran/region* definitions: :math:`E`,
-:math:`\nu`, :math:`Y`, :math:`\psi_b`, and :math:`e`. The exception
+:math:`\nu`, :math:`Y`, :math:`\psi_b`, and :math:`\eta_{n0}`. The exception
 is :math:`\Delta\gamma`, which may vary, permitting different
 adhesive behaviors between particle-particle and particle-wall interactions.
 
@@ -303,6 +297,7 @@ radius in the *mdr* model, the keyword/arg pair *cutoff radius* must be specifie
    simulation involving 200 particles named *in.tableting.200*.
    The second is a triaxial compaction simulation involving 12
    particles named *in.triaxial.compaction.12*.
+
 ----------
 
 In addition, the normal force is augmented by a damping term of the
@@ -312,7 +307,8 @@ following general form:
 
    \mathbf{F}_{n,damp} = -\eta_n \mathbf{v}_{n,rel}
 
-Here, :math:`\mathbf{v}_{n,rel} = (\mathbf{v}_j - \mathbf{v}_i) \cdot \mathbf{n}\ \mathbf{n}` is the component of relative velocity along
+Here, :math:`\mathbf{v}_{n,rel} = (\mathbf{v}_j - \mathbf{v}_i) \cdot
+\mathbf{n}\ \mathbf{n}` is the component of relative velocity along
 :math:`\mathbf{n}`.
 
 The optional *damping* keyword to the *pair_coeff* command followed by
@@ -330,6 +326,7 @@ for the damping model currently supported are:
 3. *viscoelastic*
 4. *tsuji*
 5. *coeff_restitution*
+6. *mdr* (class) : :math:`d_{type}`
 
 If the *damping* keyword is not specified, the *viscoelastic* model is
 used by default.
@@ -419,6 +416,37 @@ the damping coefficient, it accurately reproduces the specified coefficient of
 restitution for both monodisperse and polydisperse particle pairs.  This damping
 model is not compatible with cohesive normal models such as *JKR* or *DMT*.
 
+The *mdr* damping class contains multiple damping models that can be toggled between
+by specifying different integer values for the :math:`d_{type}` input parameter. This
+damping option is only compatible with the normal *mdr* contact model.
+
+Setting :math:`d_{type} = 1` is the suggested damping option. This specifies a damping
+model that takes into account the contact stiffness :math:`k_{mdr}` calculated
+by the normal *mdr* contact model to determine the damping coefficient:
+
+.. math::
+
+   \eta_n = \eta_{n0} (m_{eff}k_{mdr})^{1/2},
+
+where :math:`k_{mdr}` is proportional to contact radius :math:`a_{mdr}` tracked by the
+normal *mdr* contact model:
+
+.. math::
+
+   k_{mdr} = 2 E_{eff} a_{mdr}.
+
+In this case, :math:`\eta_{n0}` is simply a dimensionless coefficient that scales the
+the overall damping coefficient.
+
+The other supported option is :math:`d_{type} = 2`, which defines a simple damping model
+similar to the *velocity* option
+
+.. math::
+
+   \eta_n = \eta_{n0},
+
+but has additional checks to avoid non-physical damping after plastic deformation.
+
 The total normal force is computed as the sum of the elastic and
 damping components:
 
@@ -487,7 +515,8 @@ the normal force:
    F_{n0} = \|\mathbf{F}_n\|
 
 For cohesive models such as *jkr* and *dmt*, the critical force is
-adjusted so that the critical tangential force approaches :math:`\mu_t F_{pulloff}`, see :ref:`Marshall <Marshall2009>`, equation 43, and
+adjusted so that the critical tangential force approaches
+:math:`\mu_t F_{pulloff}`, see :ref:`Marshall <Marshall2009>`, equation 43, and
 :ref:`Thornton <Thornton1991>`.  For both models, :math:`F_{n0}` takes the
 form:
 
@@ -576,7 +605,6 @@ of :math:`a`, the radius of the contact region. The tangential force is given by
 .. math::
 
    \mathbf{F}_t =  -\min(\mu_t F_{n0}, \|-k_t a \mathbf{\xi} + \mathbf{F}_\mathrm{t,damp}\|) \mathbf{t}
-
 
 Here, :math:`a` is the radius of the contact region, given by :math:`a =\sqrt{R\delta}`
 for all normal contact models, except for *jkr*, where it is given
@@ -693,9 +721,11 @@ the tangential force:
 
    \mathbf{F}_{roll,0} =  k_{roll} \mathbf{\xi}_{roll}  - \gamma_{roll} \mathbf{v}_{roll}
 
-Here, :math:`\mathbf{v}_{roll} = -R(\boldsymbol{\Omega}_i - \boldsymbol{\Omega}_j) \times \mathbf{n}` is the relative rolling
-velocity, as given in :ref:`Wang et al <Wang2015>` and
-:ref:`Luding <Luding2008>`. This differs from the expressions given by :ref:`Kuhn and Bagi <Kuhn2004>` and used in :ref:`Marshall <Marshall2009>`; see :ref:`Wang et al <Wang2015>` for details. The rolling displacement is given by:
+Here, :math:`\mathbf{v}_{roll} = -R(\boldsymbol{\Omega}_i - \boldsymbol{\Omega}_j)
+\times \mathbf{n}` is the relative rolling velocity, as given in
+:ref:`Wang et al <Wang2015>` and :ref:`Luding <Luding2008>`. This differs from the
+expressions given by :ref:`Kuhn and Bagi <Kuhn2004>` and used in :ref:`Marshall <Marshall2009>`;
+see :ref:`Wang et al <Wang2015>` for details. The rolling displacement is given by:
 
 .. math::
 
@@ -752,9 +782,10 @@ the most straightforward treatment:
 
    \tau_{twist,0} = -k_{twist}\xi_{twist} - \gamma_{twist}\Omega_{twist}
 
-Here :math:`\xi_{twist} = \int_{t_0}^t \Omega_{twist} (\tau) \mathrm{d}\tau` is the twisting angular displacement, and
-:math:`\Omega_{twist} = (\mathbf{\Omega}_i - \mathbf{\Omega}_j) \cdot \mathbf{n}` is the relative twisting angular velocity. The torque
-is then truncated according to:
+Here :math:`\xi_{twist} = \int_{t_0}^t \Omega_{twist} (\tau) \mathrm{d}\tau` is
+the twisting angular displacement, and
+:math:`\Omega_{twist} = (\mathbf{\Omega}_i - \mathbf{\Omega}_j) \cdot \mathbf{n}`
+is the relative twisting angular velocity. The torque is then truncated according to:
 
 .. math::
 
@@ -805,6 +836,19 @@ is a possibility that the particles could experience an effective attractive
 force due to damping. If the optional *limit_damping* keyword is used, this option
 will zero out the normal component of the force if there is an effective
 attractive force. This keyword cannot be used with the JKR or DMT models.
+
+----------
+
+The standard velocity-Verlet integration scheme's half-step staggering of
+position and velocity can introduce inaccuracies in frictional tangential
+force calculations, resulting in unphysical kinematics in certain systems.
+These effects are particularly pronounced in polydisperse frictional flows
+characterized by large-to-small size ratios exceeding three. The
+*synchronized_verlet* flag implements an alternate Velocity-Verlet integration
+scheme, as detailed in :ref:`Vyas et al <Vyas2025>`, that synchronizes position
+and velocity updates for force evaluation. By refining tangential force
+calculations, the *synchronized_verlet* method ensures physically consistent
+results without significantly impacting computational cost.
 
 ----------
 
@@ -922,8 +966,9 @@ or
 
    E_{eff,ij} = \frac{E_{ij}}{2(1-\nu_{ij}^2)}
 
-These pair styles write their information to :doc:`binary restart files <restart>`, so a pair_style command does not need to be
-specified in an input script that reads a restart file.
+These pair styles write their information to :doc:`binary restart files <restart>`,
+so a pair_style command does not need to be specified in an input script that reads
+a restart file.
 
 These pair styles can only be used via the *pair* keyword of the
 :doc:`run_style respa <run_style>` command.  They do not support the
@@ -941,20 +986,20 @@ particle I. The next entry (8) is the magnitude of the rolling torque.
 The next entry (9) is the magnitude of the twisting torque acting
 about the vector connecting the two particle centers.
 The next 3 (10-12) are the components of the vector connecting
-the centers of the two particles (x_I - x_J). If a granular submodel
-calculates additional contact information (e.g. the heat submodels
+the centers of the two particles (x_I - x_J). If a granular sub-model
+calculates additional contact information (e.g. the heat sub-models
 calculate the amount of heat exchanged), these quantities are appended
-to the end of this list. First, any extra values from the normal submodel
+to the end of this list. First, any extra values from the normal sub-model
 are appended followed by the damping, tangential, rolling, twisting, then
-heat models. See the descriptions of specific granular submodels above
+heat models. See the descriptions of specific granular sub-models above
 for information on any extra quantities. If two or more models are
 defined by pair coefficients, the size of the array is set by the
 maximum number of extra quantities in a model but the order of quantities
-is determined by each model's specific set of submodels. Any unused
+is determined by each model's specific set of sub-models. Any unused
 quantities are zeroed.
 
-These extra quantities can be accessed by the :doc:`compute pair/local <compute_pair_local>` command, as *p1*, *p2*, ...,
-*p12*\ .
+These extra quantities can be accessed by the :doc:`compute pair/local
+<compute_pair_local>` command, as *p1*, *p2*, ..., *p12*\ .
 
 ----------
 
@@ -1037,7 +1082,7 @@ reduction. Journal of the Mechanics and Physics of Solids, 183, 105492.
 
 **(Zunker and Kamrin, 2024)** Zunker, W., & Kamrin, K. (2024).
 A mechanically-derived contact model for adhesive elastic-perfectly
-plastic particles, Part II: Contact under high compaction—modeling
+plastic particles, Part II: Contact under high compaction-modeling
 a bulk elastic response. Journal of the Mechanics and Physics of Solids,
 183, 105493.
 
@@ -1045,8 +1090,8 @@ a bulk elastic response. Journal of the Mechanics and Physics of Solids,
 
 **(Zunker et al, 2025)** Zunker, W., Dunatunga, S., Thakur, S.,
 Tang, P., & Kamrin, K. (2025). Experimentally validated DEM for large
-deformation powder compaction: mechanically-derived contact model and
-screening of non-physical contacts. engrXiv.
+deformation powder compaction: Mechanically-derived contact model and
+screening of non-physical contacts. Powder Technology, 120972.
 
 .. _Luding2008:
 
@@ -1117,3 +1162,8 @@ I. Assembling process, geometry, and contact networks. Phys. Rev. E, 76, 061302.
 Heat conduction in granular materials.
 AIChE Journal, 47(5), 1052-1059.
 
+.. _Vyas2025:
+
+**(Vyas et al, 2025)**  Vyas D. R., Ottino J. M., Lueptow R. M., & Umbanhowar P. B. (2025).
+Improved Velocity-Verlet Algorithm for the Discrete Element Method.
+Computer Physics Communications, 109524.

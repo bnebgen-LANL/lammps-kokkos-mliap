@@ -269,11 +269,11 @@ listed in the following table.
 |     8 | Radius :math:`r` of atom                           | distance units |
 +-------+----------------------------------------------------+----------------+
 
-If a granular submodel calculates additional contact information (e.g. the
-heat submodels calculate the amount of heat exchanged), these quantities
+If a granular sub-model calculates additional contact information (e.g. the
+heat sub-models calculate the amount of heat exchanged), these quantities
 are appended to the end of this array. First, any extra values from the
-normal submodel are appended followed by the damping, tangential, rolling,
-twisting, then heat models. See the descriptions of granular submodels in
+normal sub-model are appended followed by the damping, tangential, rolling,
+twisting, then heat models. See the descriptions of granular sub-models in
 the :doc:`pair granular <pair_granular>` page for information on any extra
 quantities.
 

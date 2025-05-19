@@ -3,9 +3,12 @@
 #include "library.h"
 
 #include "atom.h"
+#include "compute.h"
 #include "lammps.h"
 #include "lmptype.h"
+#include "modify.h"
 #include "platform.h"
+
 #include <string>
 #include <vector>
 
@@ -124,15 +127,9 @@ TEST_F(LibraryProperties, thermo)
     const char *key = (const char *)lammps_last_thermo(lmp, "keyword", 0);
     EXPECT_THAT(key, StrEq("Step"));
     ival = *(int *)lammps_last_thermo(lmp, "type", 0);
-#if defined(LAMMPS_SMALLSMALL)
-    EXPECT_EQ(ival, LAMMPS_INT);
-    ival = *(int *)lammps_last_thermo(lmp, "data", 0);
-    EXPECT_EQ(ival, 2);
-#else
     EXPECT_EQ(ival, LAMMPS_INT64);
     bval = *(bigint *)lammps_last_thermo(lmp, "data", 0);
     EXPECT_EQ(bval, 2);
-#endif
 
     key = (const char *)lammps_last_thermo(lmp, "keyword", 1);
     EXPECT_THAT(key, StrEq("Temp"));
@@ -250,11 +247,7 @@ TEST_F(LibraryProperties, box)
 
 TEST_F(LibraryProperties, setting)
 {
-#if defined(LAMMPS_SMALLSMALL)
-    EXPECT_EQ(lammps_extract_setting(lmp, "bigint"), 4);
-#else
     EXPECT_EQ(lammps_extract_setting(lmp, "bigint"), 8);
-#endif
 #if defined(LAMMPS_BIGBIG)
     EXPECT_EQ(lammps_extract_setting(lmp, "tagint"), 8);
     EXPECT_EQ(lammps_extract_setting(lmp, "imageint"), 8);
@@ -310,6 +303,15 @@ TEST_F(LibraryProperties, setting)
     EXPECT_EQ(lammps_extract_setting(lmp, "ndihedraltypes"), 0);
     EXPECT_EQ(lammps_extract_setting(lmp, "nimpropertypes"), 0);
 
+    EXPECT_EQ(lammps_extract_setting(lmp, "neigh_every"), 1);
+    EXPECT_EQ(lammps_extract_setting(lmp, "neigh_delay"), 0);
+    EXPECT_EQ(lammps_extract_setting(lmp, "neigh_dist_check"), 1);
+    EXPECT_EQ(lammps_extract_setting(lmp, "neigh_ago"), -1);
+    EXPECT_EQ(lammps_extract_setting(lmp, "nbondlist"), 0);
+    EXPECT_EQ(lammps_extract_setting(lmp, "nanglelist"), 0);
+    EXPECT_EQ(lammps_extract_setting(lmp, "ndihedrallist"), 0);
+    EXPECT_EQ(lammps_extract_setting(lmp, "nimproperlist"), 0);
+
     EXPECT_EQ(lammps_extract_setting(lmp, "molecule_flag"), 0);
     EXPECT_EQ(lammps_extract_setting(lmp, "q_flag"), 0);
     EXPECT_EQ(lammps_extract_setting(lmp, "mu_flag"), 0);
@@ -320,7 +322,7 @@ TEST_F(LibraryProperties, setting)
         std::string input = path_join(INPUT_DIR, "in.fourmol");
         if (!verbose) ::testing::internal::CaptureStdout();
         lammps_file(lmp, input.c_str());
-        lammps_command(lmp, "run 2 post no");
+        lammps_command(lmp, "run 3 post no");
         if (!verbose) ::testing::internal::GetCapturedStdout();
         EXPECT_EQ(lammps_extract_setting(lmp, "triclinic"), 0);
         EXPECT_EQ(lammps_extract_setting(lmp, "box_exist"), 1);
@@ -334,6 +336,15 @@ TEST_F(LibraryProperties, setting)
         EXPECT_EQ(lammps_extract_setting(lmp, "nangletypes"), 4);
         EXPECT_EQ(lammps_extract_setting(lmp, "ndihedraltypes"), 5);
         EXPECT_EQ(lammps_extract_setting(lmp, "nimpropertypes"), 2);
+
+        EXPECT_EQ(lammps_extract_setting(lmp, "neigh_every"), 2);
+        EXPECT_EQ(lammps_extract_setting(lmp, "neigh_delay"), 2);
+        EXPECT_EQ(lammps_extract_setting(lmp, "neigh_dist_check"), 0);
+        EXPECT_EQ(lammps_extract_setting(lmp, "neigh_ago"), 1);
+        EXPECT_EQ(lammps_extract_setting(lmp, "nbondlist"), 24);
+        EXPECT_EQ(lammps_extract_setting(lmp, "nanglelist"), 30);
+        EXPECT_EQ(lammps_extract_setting(lmp, "ndihedrallist"), 31);
+        EXPECT_EQ(lammps_extract_setting(lmp, "nimproperlist"), 2);
 
         EXPECT_EQ(lammps_extract_setting(lmp, "molecule_flag"), 1);
         EXPECT_EQ(lammps_extract_setting(lmp, "q_flag"), 1);
@@ -372,15 +383,9 @@ TEST_F(LibraryProperties, global)
     char *c_ptr = (char *)lammps_extract_global(lmp, "units");
     EXPECT_THAT(c_ptr, StrEq("real"));
 
-#if defined(LAMMPS_SMALLSMALL)
-    EXPECT_EQ(lammps_extract_global_datatype(lmp, "ntimestep"), LAMMPS_INT);
-    int *i_ptr = (int *)lammps_extract_global(lmp, "ntimestep");
-    EXPECT_EQ((*i_ptr), 2);
-#else
     EXPECT_EQ(lammps_extract_global_datatype(lmp, "ntimestep"), LAMMPS_INT64);
     auto *b_ptr = (int64_t *)lammps_extract_global(lmp, "ntimestep");
     EXPECT_EQ((*b_ptr), 2);
-#endif
 
     EXPECT_EQ(lammps_extract_global_datatype(lmp, "dt"), LAMMPS_DOUBLE);
     auto *d_ptr = (double *)lammps_extract_global(lmp, "dt");
@@ -597,17 +602,36 @@ TEST_F(LibraryProperties, neighlist)
     EXPECT_DOUBLE_EQ(minval, 1.0);
     EXPECT_DOUBLE_EQ(maxval, 2.1);
 
+    char errbuf[128];
+    lammps_set_show_error(lmp, 0);
     const int nlocal = lammps_extract_setting(lmp, "nlocal");
     EXPECT_EQ(nlocal, numatoms);
     EXPECT_NE(lammps_find_pair_neighlist(lmp, "sw", 1, 0, 0), -1);
+    EXPECT_EQ(lammps_has_error(lmp), 0);
     EXPECT_NE(lammps_find_pair_neighlist(lmp, "morse", 1, 0, 0), -1);
+    EXPECT_EQ(lammps_has_error(lmp), 0);
     EXPECT_NE(lammps_find_pair_neighlist(lmp, "lj/cut", 1, 1, 0), -1);
+    EXPECT_EQ(lammps_has_error(lmp), 0);
     EXPECT_NE(lammps_find_pair_neighlist(lmp, "lj/cut", 1, 2, 0), -1);
+    EXPECT_EQ(lammps_has_error(lmp), 0);
     EXPECT_EQ(lammps_find_pair_neighlist(lmp, "lj/cut", 1, 0, 0), -1);
+    EXPECT_EQ(lammps_has_error(lmp), 1);
+    EXPECT_EQ(lammps_get_last_error_message(lmp, errbuf, 128), 1);
+    errbuf[69] = '\0';
+    EXPECT_THAT(std::string(errbuf),
+                StrEq("ERROR: lammps_find_pair_neighlist(): Pair style lj/cut does not exist"));
     EXPECT_EQ(lammps_find_pair_neighlist(lmp, "hybrid/overlay", 1, 0, 0), -1);
+    EXPECT_EQ(lammps_has_error(lmp), 0);
     EXPECT_NE(lammps_find_compute_neighlist(lmp, "dist", 0), -1);
+    EXPECT_EQ(lammps_has_error(lmp), 0);
     EXPECT_EQ(lammps_find_fix_neighlist(lmp, "dist", 0), -1);
+    EXPECT_EQ(lammps_has_error(lmp), 0);
     EXPECT_EQ(lammps_find_compute_neighlist(lmp, "xxx", 0), -1);
+    EXPECT_EQ(lammps_has_error(lmp), 1);
+    EXPECT_EQ(lammps_get_last_error_message(lmp, errbuf, 128), 1);
+    errbuf[66] = '\0';
+    EXPECT_THAT(std::string(errbuf),
+                StrEq("ERROR: lammps_find_compute_neighlist(): Compute xxx does not exist"));
 
     // full neighbor list for 4 type 1 atoms
     // all have 3 type 1 atom neighbors
@@ -667,6 +691,77 @@ TEST_F(LibraryProperties, neighlist)
         EXPECT_NE(neighbors, nullptr);
     }
 };
+
+static constexpr char lj_setup[] = "lattice         fcc 0.8442\n"
+                                   "region          box block 0 10 0 10 0 10\n"
+                                   "create_box      1 box\n"
+                                   "create_atoms    1 box\n"
+                                   "mass            1 1.0\n"
+                                   "pair_style      lj/cut 2.5\n"
+                                   "pair_coeff      1 1 1.0 1.0\n"
+                                   "fix             1 all nve\n";
+
+TEST_F(LibraryProperties, step_compute)
+{
+    ::testing::internal::CaptureStdout();
+    lammps_commands_string(lmp, lj_setup);
+    lammps_command(lmp, "compute pr all pressure thermo_temp");
+    lammps_command(lmp, "fix av all ave/time 2 1 2 c_pr mode scalar");
+    lammps_command(lmp, "run 2 post no");
+    std::string output = ::testing::internal::GetCapturedStdout();
+    if (verbose) std::cout << output;
+    if (lammps_has_error(lmp)) {
+        char buf[2048];
+        lammps_get_last_error_message(lmp, buf, 2048);
+        FAIL() << buf << "\n";
+    }
+    auto lammps = (LAMMPS_NS::LAMMPS *)lmp;
+    auto icomp  = lammps->modify->get_compute_by_id("pr");
+    EXPECT_EQ(icomp->ntime, 2);
+    EXPECT_EQ(icomp->tlist[0], 4);
+    EXPECT_EQ(icomp->tlist[1], 2);
+    EXPECT_EQ(icomp->invoked_flag, 0);
+    EXPECT_EQ(icomp->invoked_scalar, 2);
+    EXPECT_EQ(icomp->invoked_vector, -1);
+    lammps_clearstep_compute(lmp);
+    EXPECT_EQ(icomp->invoked_flag, 0);
+    EXPECT_EQ(icomp->invoked_scalar, 2);
+    EXPECT_EQ(icomp->invoked_vector, -1);
+    bigint nextstep = 6;
+    lammps_addstep_compute(lmp, (void *)&nextstep);
+    EXPECT_EQ(icomp->ntime, 3);
+    EXPECT_EQ(icomp->tlist[0], 6);
+    EXPECT_EQ(icomp->tlist[1], 4);
+    EXPECT_EQ(icomp->tlist[2], 2);
+    EXPECT_EQ(icomp->invoked_flag, 0);
+    EXPECT_EQ(icomp->invoked_scalar, 2);
+    EXPECT_EQ(icomp->invoked_vector, -1);
+    lammps_command(lmp, "run 4 post no");
+    EXPECT_EQ(icomp->ntime, 2);
+    EXPECT_EQ(icomp->tlist[0], 8);
+    EXPECT_EQ(icomp->tlist[1], 6);
+    EXPECT_EQ(icomp->invoked_flag, 0);
+    EXPECT_EQ(icomp->invoked_scalar, 6);
+    EXPECT_EQ(icomp->invoked_vector, -1);
+    lammps_command(lmp, "run 2 post no");
+    EXPECT_EQ(icomp->ntime, 2);
+    EXPECT_EQ(icomp->tlist[0], 10);
+    EXPECT_EQ(icomp->tlist[1], 8);
+    EXPECT_EQ(icomp->invoked_flag, 0);
+    EXPECT_EQ(icomp->invoked_scalar, 8);
+    EXPECT_EQ(icomp->invoked_vector, -1);
+    nextstep = 9;
+    lammps_addstep_compute(lmp, (void *)&nextstep);
+    lammps_command(lmp, "run 1 post no");
+    EXPECT_EQ(icomp->ntime, 2);
+    EXPECT_EQ(icomp->tlist[0], 10);
+    EXPECT_EQ(icomp->tlist[1], 9);
+    EXPECT_EQ(icomp->invoked_flag, 0);
+    EXPECT_EQ(icomp->invoked_scalar, -1);
+    EXPECT_EQ(icomp->invoked_vector, -1);
+    icomp->compute_scalar();
+    EXPECT_EQ(icomp->invoked_scalar, 9);
+}
 
 TEST_F(LibraryProperties, has_error)
 {

@@ -207,7 +207,9 @@ accelerated styles exist.
 * :doc:`gw/zbl <pair_gw>` - Gao-Weber potential with a repulsive ZBL core
 * :doc:`harmonic/cut <pair_harmonic_cut>` - repulsive-only harmonic potential
 * :doc:`hbond/dreiding/lj <pair_hbond_dreiding>` - DREIDING hydrogen bonding LJ potential
+* :doc:`hbond/dreiding/lj/angleoffset <pair_hbond_dreiding>` - DREIDING hydrogen bonding LJ potential with offset for hbond angle
 * :doc:`hbond/dreiding/morse <pair_hbond_dreiding>` - DREIDING hydrogen bonding Morse potential
+* :doc:`hbond/dreiding/morse/angleoffset <pair_hbond_dreiding>` - DREIDING hydrogen bonding Morse potential with offset for hbond angle
 * :doc:`hdnnp <pair_hdnnp>` - High-dimensional neural network potential
 * :doc:`hippo <pair_amoeba>` -
 * :doc:`ilp/graphene/hbn <pair_ilp_graphene_hbn>` - registry-dependent interlayer potential (ILP)
@@ -270,6 +272,7 @@ accelerated styles exist.
 * :doc:`lj/long/dipole/long <pair_dipole>` - long-range LJ and long-range point dipoles
 * :doc:`lj/long/tip4p/long <pair_lj_long>` - long-range LJ and long-range Coulomb for TIP4P water
 * :doc:`lj/mdf <pair_mdf>` - LJ potential with a taper function
+* :doc:`lj/pirani <pair_lj_pirani>` - Improved LJ potential
 * :doc:`lj/relres <pair_lj_relres>` - LJ using multiscale Relative Resolution (RelRes) methodology :ref:`(Chaimovich) <Chaimovich2>`.
 * :doc:`lj/spica <pair_spica>` - LJ for SPICA coarse-graining
 * :doc:`lj/spica/coul/long <pair_spica>` - LJ for SPICA coarse-graining with long-range Coulomb

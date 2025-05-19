@@ -77,6 +77,7 @@ OPT.
    * :doc:`flow/gauss <fix_flow_gauss>`
    * :doc:`freeze (k) <fix_freeze>`
    * :doc:`gcmc <fix_gcmc>`
+   * :doc:`gjf <fix_gjf>`
    * :doc:`gld <fix_gld>`
    * :doc:`gle <fix_gle>`
    * :doc:`gravity (ko) <fix_gravity>`
@@ -162,6 +163,8 @@ OPT.
    * :doc:`phonon <fix_phonon>`
    * :doc:`pimd/langevin <fix_pimd>`
    * :doc:`pimd/nvt <fix_pimd>`
+   * :doc:`pimd/langevin/bosonic <fix_pimd>`
+   * :doc:`pimd/nvt/bosonic <fix_pimd>`
    * :doc:`planeforce <fix_planeforce>`
    * :doc:`plumed <fix_plumed>`
    * :doc:`poems <fix_poems>`
@@ -184,6 +187,7 @@ OPT.
    * :doc:`qeq/fire <fix_qeq>`
    * :doc:`qeq/point <fix_qeq>`
    * :doc:`qeq/reaxff (ko) <fix_qeq_reaxff>`
+   * :doc:`qeq/rel/reaxff <fix_qeq_rel_reaxff>`
    * :doc:`qeq/shielded <fix_qeq>`
    * :doc:`qeq/slater <fix_qeq>`
    * :doc:`qmmm <fix_qmmm>`
